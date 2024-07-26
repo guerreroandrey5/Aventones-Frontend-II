@@ -1,0 +1,43 @@
+{
+  "name": "aventones-backend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@internationalized/date": "^3.5.4",
+    "@nextui-org/avatar": "^0.0.0-canary-20240616172522",
+    "@nextui-org/button": "^2.0.34",
+    "@nextui-org/react": "^0.0.0-canary-20240616172522",
+    "@nextui-org/system": "^2.2.2",
+    "@nextui-org/theme": "^2.2.6",
+    "@nextui-org/user": "^0.0.0-canary-20240616172522",
+    "@react-aria/i18n": "^3.11.1",
+    "@react-oauth/google": "^0.12.1",
+    "framer-motion": "^11.2.11",
+    "jwt-decode": "^4.0.0",
+    "lodash": "^4.17.21",
+    "next": "14.2.4",
+    "next-themes": "^0.3.0",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-feather": "^2.0.10",
+    "react-toastify": "^10.0.5"
+  },
+  "devDependencies": {
+    "@types/lodash.debounce": "^4.0.9",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.4.19",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.4",
+    "postcss": "^8.4.39",
+    "tailwindcss": "^3.4.4",
+    "typescript": "^5"
+  }
+}

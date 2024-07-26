@@ -1,0 +1,12 @@
+@media (max-width: 374px) {
+    #Alogo {
+        visibility: hidden;
+    }
+}
+#Alogo {
+    margin: 0;
+}
+
+.a {
+    color: violet;
+}

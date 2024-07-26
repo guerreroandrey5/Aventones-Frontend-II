@@ -1,0 +1,13 @@
+.mainAventones {
+    flex-direction: column;
+    padding: 2rem;
+    align-items: center;
+    min-height: 100vh;
+    font-family: var(--monserrat);
+}
+
+@media (max-width: 700px) {
+    .mainAventones {
+        padding: 0rem;
+    }
+}

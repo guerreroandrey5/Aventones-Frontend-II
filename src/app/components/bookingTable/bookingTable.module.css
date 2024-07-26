@@ -1,0 +1,12 @@
+.mainTable {
+    flex-direction: column;
+    padding: 2rem;
+    align-items: center;
+    font-family: var(--monserrat);
+}
+
+@media (max-width: 700px) {
+    .mainTable {
+        padding: 0rem;
+    }
+}
