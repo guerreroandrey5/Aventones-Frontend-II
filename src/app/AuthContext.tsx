@@ -1,4 +1,5 @@
 'use client'
+import { jwtDecode } from 'jwt-decode';
 import React, { createContext, useState, useContext, ReactNode, FunctionComponent, useEffect } from 'react';
 
 interface AuthContextType {
@@ -45,19 +46,30 @@ const verifyToken = async (token: string) => {
 }
 
 const getUserData = async (token: string) => {
-    const response = await fetch("http://127.0.0.1:3001/user", {
-        method: "GET",
+    let decodedToken: { userId: string; } | undefined;
+    try {
+        decodedToken = jwtDecode(token as string);
+    } catch (error) {
+        console.log('Not token found!');
+    }
+
+    let graphql = JSON.stringify({
+        query: "query GetUserById($getUserByIdId: ID!) {\r\n  getUserById(id: $getUserByIdId) {\r\n    email\r\n    isDriver\r\n  }\r\n}",
+        variables: { "getUserByIdId": decodedToken?.userId }
+    })
+    const response = await fetch("http://localhost:4000/graphql", {
+        method: "POST",
         headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            "Content-Type": "application/json"
         },
+        body: graphql
     });
     if (response.ok) {
         const data = await response.json();
-        return data;
+        let User = data.data.getUserById;
+        return User;
     }
 }
-
 
 export const AuthProvider: FunctionComponent<{ children: ReactNode }> = ({ children }) => {
     const [tokenExists, setokenExists] = useState<boolean>(false);
@@ -71,7 +83,7 @@ export const AuthProvider: FunctionComponent<{ children: ReactNode }> = ({ child
                 setokenExists(true);
                 getUserData(cookies.token).then((user) => {
                     setEmail(user.email);
-                    setRole(user.role);
+                    setRole(user.isDriver ? 'Driver' : 'Rider');
                 });
             }
         });

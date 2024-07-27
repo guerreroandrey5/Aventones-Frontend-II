@@ -47,7 +47,7 @@ export default function RegisterRider() {
             email: email,
             phone: phone,
             password: password,
-            isDriver : false
+            isDriver: false
         }
         if (verifyFields()) {
             createUser(user);
@@ -81,6 +81,7 @@ export default function RegisterRider() {
         if (response && response.status == 201) {
             toastOK();
             await new Promise(resolve => setTimeout(resolve, 1500));
+            getUser();
             Router.push('/login');
         } else {
             toast('Error creating user', {
@@ -93,63 +94,87 @@ export default function RegisterRider() {
         }
     }
 
-    useEffect(() => {
-        setMounted(true)
-    }, [])
-    if (!mounted) return null
+    var graphql = JSON.stringify({
+        query: "query GetUserById($getUserByIdId: ID!) {\r\n  getUserById(id: $getUserByIdId) {\r\n    id\r\n    firstName\r\n    lastName\r\n    cedula\r\n    dob\r\n    email\r\n    phone\r\n    profilePicture\r\n    isDriver\r\n  }\r\n}",
+        variables: { "getUserByIdId": "66a45545e9b5d4a850ee7419" }
+    })
 
-    return (
-        <>
-            <div className={styles.registerMain}>
-                {theme === "dark" ? (<Image
-                    isBlurred
-                    src="/userlight.png"
-                    width={156}
-                    alt="User Dark Logo"
-                    disableSkeleton={true}
-                />) : (<Image
-                    isBlurred
-                    src="/userdark.png"
-                    width={156}
-                    alt="User Light Logo"
-                    disableSkeleton={true}
-                />)}
-                <br />
-                <Card>
-                    <CardBody>
-                        <p>Personal Details</p>
-                    </CardBody>
-                </Card>
-                <br />
-                <div className={styles.riderCRUD}>
-                    <Input type="text" color="secondary" variant="bordered" label="First Name" isRequired onChange={(e) => setfName(e.target.value)} />
-                    <Input type="text" color="secondary" variant="bordered" label="Last Name" isRequired onChange={(e) => setlName(e.target.value)} />
-                    <Input type="text" color="secondary" variant="bordered" label="Cédula" isRequired onChange={(e) => setCedula(e.target.value)} />
-                    <DatePicker color="secondary" showMonthAndYearPickers variant="bordered" label="Birth Date" calendarProps={{ onFocusChange: setDob }} onChange={(value) => setDob(value as CalendarDate)} />
-                    <Input color="secondary" type="email" variant="bordered" label="Email" isRequired onChange={(e) => setEmail(e.target.value)} />
-                    <Input color="secondary" type="number" variant="bordered" min="1" label="Phone Number" isRequired onChange={(e) => setPhone(Number(e.target.value))} />
+    const getUser = async () => {
+        try {
+            const response = await fetch("http://localhost:4000/graphql", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: graphql
+            });
+            if (response.ok) {
+                const data = await response.json();
+                let User = data.data.getUserById;
+                console.log(User.firstName + " " + User.lastName);
+                return true;
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+        useEffect(() => {
+            setMounted(true)
+        }, [])
+        if (!mounted) return null
+
+        return (
+            <>
+                <div className={styles.registerMain}>
+                    {theme === "dark" ? (<Image
+                        isBlurred
+                        src="/userlight.png"
+                        width={156}
+                        alt="User Dark Logo"
+                        disableSkeleton={true}
+                    />) : (<Image
+                        isBlurred
+                        src="/userdark.png"
+                        width={156}
+                        alt="User Light Logo"
+                        disableSkeleton={true}
+                    />)}
+                    <br />
+                    <Card>
+                        <CardBody>
+                            <p>Personal Details</p>
+                        </CardBody>
+                    </Card>
+                    <br />
+                    <div className={styles.riderCRUD}>
+                        <Input type="text" color="secondary" variant="bordered" label="First Name" isRequired onChange={(e) => setfName(e.target.value)} />
+                        <Input type="text" color="secondary" variant="bordered" label="Last Name" isRequired onChange={(e) => setlName(e.target.value)} />
+                        <Input type="text" color="secondary" variant="bordered" label="Cédula" isRequired onChange={(e) => setCedula(e.target.value)} />
+                        <DatePicker color="secondary" showMonthAndYearPickers variant="bordered" label="Birth Date" calendarProps={{ onFocusChange: setDob }} onChange={(value) => setDob(value as CalendarDate)} />
+                        <Input color="secondary" type="email" variant="bordered" label="Email" isRequired onChange={(e) => setEmail(e.target.value)} />
+                        <Input color="secondary" type="number" variant="bordered" min="1" label="Phone Number" isRequired onChange={(e) => setPhone(Number(e.target.value))} />
+                    </div>
+                    <div className={styles.riderPassword}>
+                        <Input label="Password" variant="bordered" endContent={
+                            <button id={styles.eyeButton} className="focus:outline-none" type="button" onClick={toggleVisibility}>
+                                {isVisible ? (
+                                    <EyeSlashFilledIcon className="text-2xl text-default-400 pointer-events-none" />
+                                ) : (
+                                    <EyeFilledIcon className="text-2xl text-default-400 pointer-events-none" />
+                                )}
+                            </button>
+                        }
+                            type={isVisible ? "text" : "password"}
+                            className="max-w-xs"
+                            isRequired
+                            onChange={(e) => setPassword(e.target.value)}
+                            color="secondary"
+                        />
+                    </div>
+                    <br />
+                    <ToastContainer />
+                    <Button variant="ghost" color="secondary" onClick={handleClick}>Register as a Rider</Button>
                 </div>
-                <div className={styles.riderPassword}>
-                    <Input label="Password" variant="bordered" endContent={
-                        <button id={styles.eyeButton} className="focus:outline-none" type="button" onClick={toggleVisibility}>
-                            {isVisible ? (
-                                <EyeSlashFilledIcon className="text-2xl text-default-400 pointer-events-none" />
-                            ) : (
-                                <EyeFilledIcon className="text-2xl text-default-400 pointer-events-none" />
-                            )}
-                        </button>
-                    }
-                        type={isVisible ? "text" : "password"}
-                        className="max-w-xs"
-                        isRequired
-                        onChange={(e) => setPassword(e.target.value)}
-                        color="secondary"
-                    />
-                </div>
-                <br />
-                <ToastContainer />
-                <Button variant="ghost" color="secondary" onClick={handleClick}>Register as a Rider</Button>
-            </div>
-        </>
-    );
-}
+            </>
+        );
+    }

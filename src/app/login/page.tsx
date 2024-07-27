@@ -9,6 +9,7 @@ import { EyeFilledIcon } from "../components/icons/EyeFilledIcon";
 import { Button, Input, Image, RadioGroup, Radio } from "@nextui-org/react";
 import { EyeSlashFilledIcon } from "../components/icons/EyeSlashFilledIcon";
 import { GoogleLogin, GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from 'jwt-decode';
 
 export default function LoginPage() {
     const { theme } = useTheme();
@@ -51,10 +52,9 @@ export default function LoginPage() {
             });
             if (response && response.status === 201) {
                 const data = await response.json();
+                await getUser(data.token);
                 setokenExists(true);
                 document.cookie = `token=${data.token}; max-age=86400; path=/`;
-                getUser(data.token);
-                await new Promise(resolve => setTimeout(resolve, 1000));
                 window.location.reload();
             } else {
                 toastNOK();
@@ -65,63 +65,29 @@ export default function LoginPage() {
     };
 
     const getUser = async (token: any) => {
-        const response = await fetch('http://127.0.0.1:3001/user', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        const data = await response.json();
-        localStorage.setItem('profilePic', data.profilePicture);
-    };
-
-    const handleGoogleLoginSuccess = async (tokenResponse: { access_token: any; }) => {
-        const user = {
-            token: tokenResponse.access_token,
-            type: selected
-        };
-        postGoogleSession(user);
-    };
-
-    const handleGoogleLoginError = (error: any) => {
-        console.error("Google Login Error:", error);
-        toastNOK();
-    };
-
-    // const login = useGoogleLogin({
-    //     onSuccess: handleGoogleLoginSuccess,
-    //     onError: handleGoogleLoginError,
-    // });
-
-    const loginSuccessResponseHandler = (credentialResponse: any) => {
-        console.log(credentialResponse);
-    }
-    const loginErrorResponseHandler = () => {
-        alert("Login failed, please try again");
-    }
-
-    const postGoogleSession = async (user: { token: any; type: string; }) => {
+        let decodedToken: { userId: string; } | undefined;
         try {
-            const response = await fetch("http://127.0.0.1:3001/auth/google", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(user)
-            });
-            if (response && response.status === 201) {
-                const data = await response.json();
-                setokenExists(true);
-                document.cookie = `token=${data.token}; max-age=86400; path=/`;
-                getUser(data.token);
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                window.location.reload();
-            } else {
-                toastNOK();
-            }
+            decodedToken = jwtDecode(token as string);
         } catch (error) {
-            console.error("Error:", error);
+            console.log('Not token found!');
+        }
+
+        let graphql = JSON.stringify({
+            query: "query GetUserById($getUserByIdId: ID!) {\r\n  getUserById(id: $getUserByIdId) {\r\n    profilePicture\r\n    }\r\n}",
+            variables: { "getUserByIdId": decodedToken?.userId }
+        })
+        const response = await fetch("http://localhost:4000/graphql", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: graphql
+        });
+        if (response.ok) {
+            const data = await response.json();
+            let User = data.data.getUserById;
+            console.log(User.profilePicture);
+            localStorage.setItem('profilePic', User.profilePicture);
         }
     };
 
@@ -197,15 +163,6 @@ export default function LoginPage() {
                     Login
                 </Button>
                 <br />
-                {/* <GoogleOAuthProvider clientId="550847600531-7ndbqri18d7451kut15oq4b6c4hm1vko.apps.googleusercontent.com">
-                    <GoogleLogin
-                        onSuccess={loginSuccessResponseHandler}
-                        onError={loginErrorResponseHandler}
-                        theme="filled_blue"
-                        shape="circle"
-                        text="continue_with"
-                    />
-                </GoogleOAuthProvider> */}
             </div>
             <ToastContainer />
         </>

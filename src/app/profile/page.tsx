@@ -6,6 +6,7 @@ import styles from './profile.module.css';
 import { Chip, Card, CardHeader, CardBody, CardFooter, Input, Button, Divider, Spinner, Checkbox, Modal, ModalHeader, ModalContent, ModalBody, ModalFooter, useDisclosure, Tooltip, input } from "@nextui-org/react";
 import { toast, ToastContainer } from 'react-toastify';
 import { useTheme } from 'next-themes';
+import { jwtDecode } from 'jwt-decode';
 
 const ProfilePage: React.FC = () => {
 
@@ -81,32 +82,13 @@ const ProfilePage: React.FC = () => {
         });
 
     const handleClick = () => {
-        let user;
-        if (role === 'Rider') {
-            const rider = {
-                first_name: fname,
-                last_name: lname,
-                email: email,
-                phone: phone,
-                profilePicture: profilePic
-            };
-            user = rider;
-        }
-        else {
-            const driver = {
-                first_name: fname,
-                last_name: lname,
-                email: email,
-                phone: phone,
-                model: model,
-                plate: plate,
-                year: year,
-                make: make,
-                seats: seats,
-                profilePicture: profilePic
-            };
-            user = driver;
-        }
+        let user = {
+            firstName: fname,
+            lastName: lname,
+            email: email,
+            phone: phone,
+            profilePicture: profilePic
+        };
         updateProfile(user);
     }
 
@@ -118,7 +100,7 @@ const ProfilePage: React.FC = () => {
         return null;
     }
 
-    const updateProfile = async (user: any) => {
+    const updateProfile = async (user: { firstName: string; lastName: string; email: string; phone: number; profilePicture: string; }) => {
         const token = getToken();
         const response = await fetch('http://127.0.0.1:3001/user', {
             method: 'PATCH',
@@ -143,35 +125,43 @@ const ProfilePage: React.FC = () => {
         const fetchUserData = async () => {
             try {
                 const token = getToken();
-                const response = await fetch('http://127.0.0.1:3001/user', {
-                    method: 'GET',
+                let decodedToken: { userId: string; } | undefined;
+                try {
+                    decodedToken = jwtDecode(token as string);
+                } catch (error) {
+                    console.log('Not token found!');
+                }
+
+                let graphql = JSON.stringify({
+                    query: "query GetUserById($getUserByIdId: ID!) {\r\n  getUserById(id: $getUserByIdId) {\r\n    id\r\n    firstName\r\n    lastName\r\n    cedula\r\n    dob\r\n    email\r\n    phone\r\n    profilePicture\r\n    isDriver\r\n  }\r\n}",
+                    variables: { "getUserByIdId": decodedToken?.userId }
+                })
+                const response = await fetch("http://localhost:4000/graphql", {
+                    method: "POST",
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    }
+                        "Content-Type": "application/json"
+                    },
+                    body: graphql
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    setFname(data.first_name);
-                    setLname(data.last_name);
-                    setEmail(data.email);
-                    setPhone(data.phone);
-                    setModel(data.model);
-                    setPlate(data.plate);
-                    setYear(data.year);
-                    setMake(data.make);
-                    setSeats(data.seats);
-                    setRole(data.role);
-                } else {
-                    console.error('Failed to fetch user data');
-                    router.push('/login');
+                    let User = data.data.getUserById;
+                    setFname(User.firstName);
+                    setLname(User.lastName);
+                    setEmail(User.email);
+                    setPhone(User.phone);
+                    setModel(User.model);
+                    setPlate(User.plate);
+                    setYear(User.year);
+                    setMake(User.make);
+                    setSeats(User.seats);
+                    setRole(User.isDriver ? 'Driver' : 'Rider');
+                    return true;
                 }
             } catch (error) {
-                console.error('Error:', error);
-                router.push('/login');
+                console.log(error);
             }
-        };
-
+        }
         if (tokenExists) {
             fetchUserData();
         } else {
@@ -195,9 +185,6 @@ const ProfilePage: React.FC = () => {
                             <Input type="text" variant="bordered" color="secondary" label="Last Name" value={lname} isReadOnly={isReadOnly} onChange={(e) => setLname(e.target.value)} /><br />
                             <Input type="email" variant="bordered" color="secondary" label="Email" value={email} isReadOnly={isReadOnly} onChange={(e) => setEmail(e.target.value)} /><br />
                             <Input type="number" variant="bordered" color="secondary" label="Phone" value={phone.toString()} isReadOnly={isReadOnly} onChange={(e) => setPhone(Number(e.target.value))} /><br />
-                            <Tooltip color="danger" content="Role cannot be changed, please create a Driver Account">
-                                <Input type="text" variant="bordered" color="secondary" label="Role" value={role} isReadOnly={true} onChange={(e) => setRole(e.target.value)} />
-                            </Tooltip>
                             <br />
                             <input type="file" accept='.jpg, .png, .jpeg' color="secondary" disabled={isReadOnly} onChange={(e) => e.target.files && uploadImg(e.target.files[0])} />
                             <br />
@@ -209,9 +196,6 @@ const ProfilePage: React.FC = () => {
                             <Input type="text" variant="bordered" color="secondary" label="Last Name" value={lname} isReadOnly={isReadOnly} onChange={(e) => setLname(e.target.value)} /><br />
                             <Input type="email" variant="bordered" color="secondary" label="Email" value={email} isReadOnly={isReadOnly} onChange={(e) => setEmail(e.target.value)} /><br />
                             <Input type="number" variant="bordered" color="secondary" label="Phone" value={phone.toString()} isReadOnly={isReadOnly} onChange={(e) => setPhone(Number(e.target.value))} /><br />
-                            <Tooltip color="danger" content="Role cannot be changed, please create a Driver Account">
-                                <Input type="text" variant="bordered" color="secondary" label="Role" value={role} isReadOnly={true} />
-                            </Tooltip>
                             <br />
                             <input type="file" accept='.jpg, .png, .jpeg' color="secondary" disabled={isReadOnly} onChange={(e) => e.target.files && uploadImg(e.target.files[0])} />
                             <br />
