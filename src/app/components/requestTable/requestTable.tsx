@@ -22,7 +22,6 @@ export default function RequestTable() {
     const router = useRouter();
     const modal1Disclosure = useDisclosure();
     const modal2Disclosure = useDisclosure();
-    // const { isOpen, onOpen, onOpenChange } = useDisclosure();
     const loadingState = requests.length === 0 ? "loading" : "idle";
     const [rider, setRider] = useState<any>();
     const [booking, setBooking] = useState<any>();

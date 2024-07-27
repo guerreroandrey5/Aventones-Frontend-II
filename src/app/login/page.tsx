@@ -12,12 +12,14 @@ import { GoogleLogin, GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/g
 
 export default function LoginPage() {
     const { theme } = useTheme();
+    const [mounted, setMounted] = useState(false);
     const [selected, setSelected] = React.useState("rider");
     const { tokenExists, setokenExists } = useAuth();
     const router = useRouter();
     const [isVisible, setIsVisible] = React.useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [image, setImage] = useState("");
 
     const toggleVisibility = () => setIsVisible(!isVisible);
 
@@ -25,7 +27,6 @@ export default function LoginPage() {
         let user = {
             email: email.toLowerCase(),
             password: password,
-            type: selected
         };
         postSession(user);
     };
@@ -39,7 +40,7 @@ export default function LoginPage() {
             position: 'top-left',
         });
 
-    const postSession = async (user: { email: string; password: string; type: string; }) => {
+    const postSession = async (user: { email: string; password: string; }) => {
         try {
             const response = await fetch("http://127.0.0.1:3001/auth", {
                 method: "POST",
@@ -130,38 +131,27 @@ export default function LoginPage() {
         }
     }, [tokenExists, router]);
 
+    useEffect(() => {
+        setMounted(true)
+    }, [])
+    if (!mounted) return null
+
     return (
         <>
             <div className={styles.loginMain}>
-                {theme === "dark" ? (selected === "rider" ? (
-                    <Image
-                        isBlurred
-                        src="/userlight.png"
-                        alt="User Icon"
-                        disableSkeleton={true}
-                    />
-                ) : (
-                    <Image
-                        isBlurred
-                        src="/sedanlight.png"
-                        alt="Car Icon"
-                        disableSkeleton={true}
-                    />
-                )) : (selected === "rider" ? (
-                    <Image
-                        isBlurred
-                        src="/userdark.png"
-                        alt="User Icon"
-                        disableSkeleton={true}
-                    />
-                ) : (
-                    <Image
-                        isBlurred
-                        src="/sedandark.png"
-                        alt="Car Icon"
-                        disableSkeleton={true}
-                    />
-                ))}
+                {theme === "dark" ? (<Image
+                    isBlurred
+                    src="/userlight.png"
+                    width={156}
+                    alt="User Dark Logo"
+                    disableSkeleton={true}
+                />) : (<Image
+                    isBlurred
+                    src="/userdark.png"
+                    width={156}
+                    alt="User Light Logo"
+                    disableSkeleton={true}
+                />)}
                 <h1 className={styles.h1Title}>Log In into Aventones</h1>
                 <RadioGroup
                     label="Are you a Rider or a Driver?"
