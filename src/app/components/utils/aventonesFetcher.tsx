@@ -38,7 +38,7 @@ const aventonesFetcher = async () => {
             query: "query GetRidesByDriver($getRidesByDriverId: ID!) {\n  getRidesByDriver(id: $getRidesByDriverId) {\n      id\n    driver {\n      firstName\n      lastName\n      profilePicture\n      vehicle {\n        make\n        model\n        year\n      }\n    }\n    pickup\n    destination\n    days\n    fee\n    time\n    seatsAvailable\n  }\n}",
             variables: { "getRidesByDriverId": decodedToken?.userId }
         })
-        response = await fetch("http://localhost:4000/graphql", {
+        response = await fetch("http://127.0.0.1:4000/graphql", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -53,7 +53,7 @@ const aventonesFetcher = async () => {
             variables: {}
         })
 
-        response = await fetch("http://localhost:4000/graphql/guest", {
+        response = await fetch("http://127.0.0.1:4000/graphql/guest", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

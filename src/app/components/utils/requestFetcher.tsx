@@ -35,7 +35,7 @@ const aventonesFetcher = async () => {
             query: "query GetRequestsByDriver($getRequestsByDriverId: ID!) {\r\n  getRequestsByDriver(id: $getRequestsByDriverId) {\r\n     id\r\n    ride {\r\n      id\r\n      pickup\r\n      destination\r\n      days\r\n      fee\r\n      time\r\n      seatsAvailable\r\n      riders {\r\n        id\r\n      }\r\n    }\r\n    rider {\r\n      id\r\n      firstName\r\n      lastName\r\n      profilePicture\r\n      phone\r\n      email\r\n      dob\r\n      cedula\r\n    }\r\n  }\r\n}",
             variables: { "getRequestsByDriverId": decodedToken?.userId }
         })
-        response = await fetch("http://localhost:4000/graphql", {
+        response = await fetch("http://127.0.0.1:4000/graphql", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -50,7 +50,7 @@ const aventonesFetcher = async () => {
             variables: {}
         })
 
-        response = await fetch("http://localhost:4000/graphql", {
+        response = await fetch("http://127.0.0.1:4000/graphql", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

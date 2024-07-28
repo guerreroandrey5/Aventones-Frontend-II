@@ -30,7 +30,7 @@ const ProfilePage: React.FC = () => {
     const uploadImg = async (file: File) => {
         const base64: string = await convert64(file);
 
-        if (base64.length > 2097152) {
+        if (base64.length > 3097152) {
             toast('The selected Image is larger than 1.5MB!', {
                 hideProgressBar: true,
                 autoClose: 2000,
@@ -41,7 +41,6 @@ const ProfilePage: React.FC = () => {
         }
         else {
             setprofilePic(base64);
-            console.log(base64);
             toast('Image uploaded succesfully!', {
                 hideProgressBar: true,
                 autoClose: 2000,
@@ -111,7 +110,7 @@ const ProfilePage: React.FC = () => {
             body: JSON.stringify(user)
         });
         if (response.ok) {
-            localStorage.setItem('profilePic', profilePic);
+            localStorage.setItem('profilePicture', profilePic);
             toastOK();
             await new Promise(resolve => setTimeout(resolve, 1000));
             location.reload();
@@ -136,7 +135,7 @@ const ProfilePage: React.FC = () => {
                     query: "query GetUserById($getUserByIdId: ID!) {\n  getUserById(id: $getUserByIdId) {\n    firstName\n    lastName\n    cedula\n    dob\n    email\n    phone\n    isDriver\n    vehicle {\n      model\n      year\n      plate\n      make\n      seats\n    }\n  }\n}",
                     variables: { "getUserByIdId": decodedToken?.userId }
                 })
-                const response = await fetch("http://localhost:4000/graphql",
+                const response = await fetch("http://127.0.0.1:4000/graphql",
                     {
                         method: "POST",
                         headers: {

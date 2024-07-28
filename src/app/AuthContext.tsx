@@ -57,7 +57,7 @@ const getUserData = async (token: string) => {
         query: "query GetUserById($getUserByIdId: ID!) {\r\n  getUserById(id: $getUserByIdId) {\r\n    email\r\n    isDriver\r\n  }\r\n}",
         variables: { "getUserByIdId": decodedToken?.userId }
     })
-    const response = await fetch("http://localhost:4000/graphql", {
+    const response = await fetch("http://127.0.0.1:4000/graphql", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

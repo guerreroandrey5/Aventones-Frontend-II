@@ -19,12 +19,12 @@ export default function NavBar() {
 
     const userLogout = () => {
         document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-        localStorage.removeItem('profilePic');
+        localStorage.removeItem('profilePicture');
     }
 
     useEffect(() => {
         let profilePic = "/userdark.png";
-        const LSPP = localStorage.getItem('profilePic');
+        const LSPP = localStorage.getItem('profilePicture');
         if (LSPP == null || LSPP == "" || LSPP == "null" || LSPP == "undefined") {
             setUserPicture(profilePic);
         } else {

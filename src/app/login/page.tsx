@@ -6,7 +6,7 @@ import { useAuth } from "../AuthContext";
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from "react";
 import { EyeFilledIcon } from "../components/icons/EyeFilledIcon";
-import { Button, Input, Image, RadioGroup, Radio } from "@nextui-org/react";
+import { Button, Input, Image } from "@nextui-org/react";
 import { EyeSlashFilledIcon } from "../components/icons/EyeSlashFilledIcon";
 import { jwtDecode } from 'jwt-decode';
 
@@ -49,6 +49,7 @@ export default function LoginPage() {
             });
             if (response && response.status === 201) {
                 const data = await response.json();
+                await fetchUserData(data.token);
                 setokenExists(true);
                 document.cookie = `token=${data.token}; max-age=86400; path=/`;
                 location.reload();
@@ -59,6 +60,38 @@ export default function LoginPage() {
             console.error("Error:", error);
         }
     };
+
+    const fetchUserData = async (token: string) => {
+        try {
+            let decodedToken: { userId: string; } | undefined;
+            try {
+                decodedToken = jwtDecode(token as string);
+            } catch (error) {
+                console.log('Not token found!');
+            }
+
+            let graphql = JSON.stringify({
+                query: "query GetUserById($getUserByIdId: ID!) {\n  getUserById(id: $getUserByIdId) {\n    profilePicture\n     }\n}",
+                variables: { "getUserByIdId": decodedToken?.userId }
+            })
+            const response = await fetch("http://127.0.0.1:4000/graphql",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: graphql
+                });
+            if (response.ok) {
+                const data = await response.json();
+                let User = data.data.getUserById;
+                localStorage.setItem('profilePicture', User.profilePicture);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
     useEffect(() => {
         if (tokenExists) {
