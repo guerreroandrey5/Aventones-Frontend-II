@@ -136,13 +136,15 @@ const ProfilePage: React.FC = () => {
                     query: "query GetUserById($getUserByIdId: ID!) {\n  getUserById(id: $getUserByIdId) {\n    firstName\n    lastName\n    cedula\n    dob\n    email\n    phone\n    isDriver\n    vehicle {\n      model\n      year\n      plate\n      make\n      seats\n    }\n  }\n}",
                     variables: { "getUserByIdId": decodedToken?.userId }
                 })
-                const response = await fetch("http://localhost:4000/graphql", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: graphql
-                });
+                const response = await fetch("http://localhost:4000/graphql",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: graphql
+                    });
                 if (response.ok) {
                     const data = await response.json();
                     let User = data.data.getUserById;
@@ -150,12 +152,14 @@ const ProfilePage: React.FC = () => {
                     setLname(User.lastName);
                     setEmail(User.email);
                     setPhone(User.phone);
-                    setModel(User.vehicle.model);
-                    setPlate(User.vehicle.plate);
-                    setYear(User.vehicle.year);
-                    setMake(User.vehicle.make);
-                    setSeats(User.vehicle.seats);
                     setRole(User.isDriver ? 'Driver' : 'Rider');
+                    if (User.isDriver) {
+                        setModel(User.vehicle.model);
+                        setPlate(User.vehicle.plate);
+                        setYear(User.vehicle.year);
+                        setMake(User.vehicle.make);
+                        setSeats(User.vehicle.seats);
+                    }
                     return true;
                 }
             } catch (error) {
@@ -209,6 +213,7 @@ const ProfilePage: React.FC = () => {
                                 </Card>
                                 <br />
                                 <Input type="text" variant="bordered" color="secondary" label="Make" value={make} isReadOnly={isReadOnly} onChange={(e) => setMake(e.target.value)} /><br />
+                                <Input type="text" variant="bordered" color="secondary" label="Plate" value={plate} isReadOnly={isReadOnly} onChange={(e) => setPlate(e.target.value)} /><br />
                                 <Input type="text" variant="bordered" color="secondary" label="Model" value={model} isReadOnly={isReadOnly} onChange={(e) => setModel(e.target.value)} /><br />
                                 <Input type="Number" variant="bordered" color="secondary" label="Year" value={year.toString()} isReadOnly={isReadOnly} onChange={(e) => setYear(Number(e.target.value))} /><br />
                                 <Input type="Number" variant="bordered" color="secondary" min="1" label="Seats" value={seats.toString()} isReadOnly={isReadOnly} onChange={(e) => setSeats(Number(e.target.value))} /><br />

@@ -9,11 +9,11 @@ import { Card, CardBody, Input, Button, CheckboxGroup, Checkbox, Spinner, TimeIn
 import { useTheme } from "next-themes";
 import { toast, ToastContainer } from "react-toastify";
 
-export default function BookingDetailsPage() {
+export default function RideDetailsPage() {
 
     const router = useRouter()
     const { isOpen, onOpen, onOpenChange } = useDisclosure();
-    const [bookingId, setBookingId] = useState(localStorage.getItem('bookingId') ?? "");
+    const [rideId, setRideId] = useState(localStorage.getItem('rideId') ?? "");
     const [isReadOnly, setisReadOnly] = React.useState(true);
     const { tokenExists } = useAuth();
     const { theme } = useTheme()
@@ -49,7 +49,7 @@ export default function BookingDetailsPage() {
         });
 
     const handleClick = () => {
-        const booking = {
+        const ride = {
             pickup: pickup,
             destination: destination,
             fee: fee,
@@ -57,22 +57,22 @@ export default function BookingDetailsPage() {
             seatsAvailable: seats,
             days: days
         };
-        updateBooking(booking);
+        updateRide(ride);
     }
 
-    const updateBooking = async (booking: any) => {
+    const updateRide = async (ride: { pickup: string; destination: string; fee: number; time: string; seatsAvailable: number; days: string[]; }) => {
         const token = getToken();
-        const response = await fetch(`http://127.0.0.1:3001/booking/?id=${bookingId}`, {
+        const response = await fetch(`http://127.0.0.1:3001/ride/?id=${rideId}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify(booking)
+            body: JSON.stringify(ride)
         });
         if (response.ok) {
             toastOK();
-            localStorage.removeItem('bookingId');
+            localStorage.removeItem('rideId');
             await new Promise(resolve => setTimeout(resolve, 1000));
             location.reload();
         }
@@ -82,11 +82,11 @@ export default function BookingDetailsPage() {
     };
 
     useEffect(() => {
-        setBookingId(localStorage.getItem('bookingId') ?? "");
+        setRideId(localStorage.getItem('bookingId') ?? "");
         const fetchBookingData = async () => {
             try {
                 const token = getToken();
-                const response = await fetch(`http://127.0.0.1:3001/booking/?id=${bookingId}`, {
+                const response = await fetch(`http://127.0.0.1:3001/booking/?id=${rideId}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -116,7 +116,7 @@ export default function BookingDetailsPage() {
         } else {
             router.push('/login');
         }
-    }, [tokenExists, router, bookingId]);
+    }, [tokenExists, router, rideId]);
 
     if (!time) return <div className={styles.bookingMain}> <Spinner label="Loading..." color="secondary" /></div>;
     return (

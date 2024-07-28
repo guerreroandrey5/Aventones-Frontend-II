@@ -140,7 +140,14 @@ export default function Aventones() {
             router.push('/login');
         }
     }, [tokenExists, router]);
-
+    if (rides.length == 0) return <div className={styles.mainAventones}>
+        <h1 className="text-2xl text-bold text-center">No Aventones Available</h1> <br />
+        <div className="flex justify-center gap-2">
+            <Button color="secondary" variant="ghost" onClick={() => router.push('/ride')}>
+                Create an Aventon
+            </Button>
+        </div>
+    </div>;
     return (
         <div className={styles.mainAventones}>
             <h1 className="text-2xl text-bold text-center">My Aventones</h1>

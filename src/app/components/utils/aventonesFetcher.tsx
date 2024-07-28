@@ -2,7 +2,7 @@
 
 import { jwtDecode } from "jwt-decode";
 
-interface bookings {
+interface rides {
     id: string;
     driver: string;
     from: string;
@@ -14,7 +14,7 @@ interface bookings {
 }[];
 
 const aventonesFetcher = async () => {
-    const bookings: bookings[] = [];
+    const rides: rides[] = [];
 
     let response;
     const getToken = () => {
@@ -26,53 +26,68 @@ const aventonesFetcher = async () => {
     }
 
     let token = getToken();
-    let decodedToken: { userId: string; role: string; } | undefined;
+    let decodedToken: { userId: string; isDriver: boolean; } | undefined;
     try {
         decodedToken = jwtDecode(token as string);
     } catch (error) {
         console.log('Not token found!');
     }
 
-    if (token && decodedToken && decodedToken.role === 'driver') {
-        response = await fetch(`http://127.0.0.1:3001/booking/?driver=${decodedToken.userId}`, {
-            method: 'GET',
+    if (token && decodedToken && decodedToken.isDriver) {
+        let graphql = JSON.stringify({
+            query: "query GetRidesByDriver($getRidesByDriverId: ID!) {\n  getRidesByDriver(id: $getRidesByDriverId) {\n      id\n    driver {\n      firstName\n      lastName\n      profilePicture\n      vehicle {\n        make\n        model\n        year\n      }\n    }\n    pickup\n    destination\n    days\n    fee\n    time\n    seatsAvailable\n  }\n}",
+            variables: { "getRidesByDriverId": decodedToken?.userId }
+        })
+        response = await fetch("http://localhost:4000/graphql", {
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json'
-            }
+                "Content-Type": "application/json",
+                'Authorization': `Bearer ${token}`
+            },
+            body: graphql
         });
     } else {
 
-        response = await fetch(`http://127.0.0.1:3001/booking/`, {
-            method: 'GET',
+        let graphql = JSON.stringify({
+            query: "query GetAllRides {\r\n  getAllRides {\r\n    id\r\n    driver {\r\n      firstName\r\n      lastName\r\n      profilePicture\r\n      vehicle {\r\n        make\r\n        model\r\n        year\r\n      }\r\n    }\r\n    pickup\r\n    destination\r\n    days\r\n    fee\r\n    time\r\n    seatsAvailable\r\n  }\r\n}",
+            variables: {}
+        })
+
+        response = await fetch("http://localhost:4000/graphql/guest", {
+            method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
-            }
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: graphql
         });
     }
     if (response !== undefined && response.ok) {
         const data = await response.json();
-        for (const booking of data) {
-            let DBbooking = {
-                id: booking._id,
-                driver: `${booking.driver.first_name + " " + booking.driver.last_name}`,
-                from: booking.pickup,
-                to: booking.destination,
-                seats: Number(booking.seatsAvailable),
-                fee: `${'$' + booking.fee}`,
-                avatar: booking.driver.profilePicture,
-                car: `${booking.driver.make + " " + booking.driver.model + " " + booking.driver.year}`
+        let Ride;
+        decodedToken?.isDriver ? Ride = data.data.getRidesByDriver : Ride = data;
+        for (const ride of Ride) {
+            let DBRide = {
+                id: ride._id ? ride._id : ride.id,
+                driver: `${ride.driver.firstName + " " + ride.driver.lastName}`,
+                from: ride.pickup,
+                to: ride.destination,
+                seats: Number(ride.seatsAvailable),
+                fee: `${'$' + ride.fee}`,
+                avatar: ride.driver.profilePicture,
+                car: `${ride.driver.vehicle.make + " " + ride.driver.vehicle.model + " " + ride.driver.vehicle.year}`
             }
-            if (DBbooking.seats > 0 && decodedToken && decodedToken.role === 'rider' || DBbooking.seats > 0 && !token) {
-                bookings.push(DBbooking);
+            if (DBRide.seats > 0 && decodedToken && !decodedToken.isDriver || DBRide.seats > 0 && !token) {
+                rides.push(DBRide);
             }
-            if (token && decodedToken && decodedToken.role === 'driver') {
-                bookings.push(DBbooking);
+            if (token && decodedToken && decodedToken.isDriver) {
+                rides.push(DBRide);
             }
         }
     } else {
-        console.error('An unexpected error happened:', response?.statusText);
+        console.log('An unexpected error happened:', response?.statusText);
     }
-    return bookings;
+    return rides;
 };
 
 export default aventonesFetcher;

@@ -1,12 +1,12 @@
 'use client'
 import { useRouter } from 'next/navigation';
-import styles from "./bookingTable.module.css";
+import styles from "./rideTable.module.css";
 import React, { useEffect, useState } from "react";
-import { EyeIcon } from "../../components/icons/EyeIcon";
+import { EyeIcon } from "../icons/EyeIcon";
 import AventonesFetcher from "../utils/aventonesFetcher";
 import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Tooltip, User, Spinner, Input, Button } from "@nextui-org/react";
 
-interface Booking {
+interface Ride {
     id: string;
     driver: string;
     from: string;
@@ -17,20 +17,20 @@ interface Booking {
     car: string;
 }
 
-export default function BookingTable() {
+export default function RideTable() {
 
-    const [bookings, setBookings] = useState<Booking[]>([]);
-    const [originalBookings, setOriginalBookings] = useState<Booking[]>([]);
+    const [rides, setRides] = useState<Ride[]>([]);
+    const [originalRides, setOriginalRides] = useState<Ride[]>([]);
     const [searchFrom, setSearchFrom] = useState<string>('');
     const [searchTo, setSearchTo] = useState<string>('');
     const router = useRouter();
-    const loadingState = bookings.length === 0 ? "loading" : "idle";
+    const loadingState = rides.length === 0 ? "loading" : "idle";
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            AventonesFetcher().then((result: React.SetStateAction<Booking[]>) => {
-                setBookings(result);
-                setOriginalBookings(result);
+            AventonesFetcher().then((result: React.SetStateAction<Ride[]>) => {
+                setRides(result);
+                setOriginalRides(result);
             });
         }
     }, []);
@@ -43,24 +43,24 @@ export default function BookingTable() {
         { name: "ACTIONS", uid: "actions" },
     ];
 
-    const renderCell = React.useCallback((booking: Booking, columnKey: React.Key) => {
-        const cellValue = booking[columnKey as keyof Booking];
+    const renderCell = React.useCallback((ride: Ride, columnKey: React.Key) => {
+        const cellValue = ride[columnKey as keyof Ride];
         switch (columnKey) {
             case "driver":
                 return (
                     <User
-                        avatarProps={{ radius: "lg", src: booking.avatar }}
-                        description={booking.car}
+                        avatarProps={{ radius: "lg", src: ride.avatar }}
+                        description={ride.car}
                         name={cellValue}
                     >
-                        {booking.car}
+                        {ride.car}
                     </User>
                 );
             case "from":
                 return (
                     <div className="flex flex-col">
                         <p className="text-bold text-sm capitalize">{cellValue}</p>
-                        <p className="text-bold text-sm capitalize text-default-400">{booking.to}</p>
+                        <p className="text-bold text-sm capitalize text-default-400">{ride.to}</p>
                     </div>
                 );
             case "seats":
@@ -80,8 +80,8 @@ export default function BookingTable() {
                     <div className="relative flex justify-center items-center gap-1">
                         <Tooltip color="secondary" content="View Details about this Aventon">
                             <span onClick={() => {
-                                router.push('/booking/details')
-                                localStorage.setItem('bookingId', booking.id);
+                                router.push('/ride/details')
+                                localStorage.setItem('rideId', ride.id);
                             }} className="text-lg text-secondary cursor-pointer active:opacity-50">
                                 <EyeIcon />
                             </span>
@@ -94,18 +94,18 @@ export default function BookingTable() {
     }, [router]);
 
     const handleSearch = () => {
-        const filteredBookings = originalBookings.filter((booking) => {
-            const fromMatch = searchFrom ? booking.from.toLowerCase().includes(searchFrom.toLowerCase()) : true;
-            const toMatch = searchTo ? booking.to.toLowerCase().includes(searchTo.toLowerCase()) : true;
+        const filteredRides = originalRides.filter((ride) => {
+            const fromMatch = searchFrom ? ride.from.toLowerCase().includes(searchFrom.toLowerCase()) : true;
+            const toMatch = searchTo ? ride.to.toLowerCase().includes(searchTo.toLowerCase()) : true;
             return fromMatch && toMatch;
         });
-        setBookings(filteredBookings);
+        setRides(filteredRides);
     };
 
     const handleReset = () => {
         setSearchFrom('');
         setSearchTo('');
-        setBookings(originalBookings);
+        setRides(originalRides);
     };
 
     return (
@@ -146,10 +146,10 @@ export default function BookingTable() {
                         </TableColumn>
                     )}
                 </TableHeader>
-                <TableBody items={bookings} loadingContent={<Spinner label="Loading..." color="secondary" />} loadingState={loadingState}>
-                    {(booking) => (
-                        <TableRow key={booking.id}>
-                            {(columnKey) => <TableCell>{renderCell(booking, columnKey)}</TableCell>}
+                <TableBody items={rides} loadingContent={<Spinner label="Loading..." color="secondary" />} loadingState={loadingState}>
+                    {(ride) => (
+                        <TableRow key={ride.id}>
+                            {(columnKey) => <TableCell>{renderCell(ride, columnKey)}</TableCell>}
                         </TableRow>
                     )}
                 </TableBody>

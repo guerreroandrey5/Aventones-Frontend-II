@@ -88,7 +88,6 @@ export default function RideCreator() {
             if (response && response.status == 201) {
                 toastOK();
                 localStorage.removeItem('requestId');
-                localStorage.removeItem('action');
                 await new Promise(resolve => setTimeout(resolve, 1500));
                 router.push('/aventones');
                 router.refresh();

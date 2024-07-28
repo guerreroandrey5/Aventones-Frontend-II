@@ -12,7 +12,7 @@ import { DeleteIcon } from '../icons/DeleteIcon';
 interface Request {
     id: string;
     rider: any;
-    booking: any;
+    ride: any;
     avatar: any;
 }
 
@@ -24,7 +24,7 @@ export default function RequestTable() {
     const modal2Disclosure = useDisclosure();
     const loadingState = requests.length === 0 ? "loading" : "idle";
     const [rider, setRider] = useState<any>();
-    const [booking, setBooking] = useState<any>();
+    const [ride, setRide] = useState<any>();
     const [requestId, setRequestId] = useState("");
     const { theme } = useTheme();
 
@@ -38,7 +38,7 @@ export default function RequestTable() {
 
     const columns = [
         { name: "RIDER", uid: "rider" },
-        { name: "BOOKING TRAVEL", uid: "booking" },
+        { name: "AVENTON TRAVEL", uid: "ride" },
         { name: "ACTIONS", uid: "actions" }
     ];
 
@@ -48,30 +48,30 @@ export default function RequestTable() {
             case "rider":
                 return (
                     <User
-                        avatarProps={{ radius: "lg", src: request.avatar}}
-                        description={request.rider.last_name}
-                        name={request.rider.first_name}
+                        avatarProps={{ radius: "lg", src: request.avatar }}
+                        description={request.rider.lastName}
+                        name={request.rider.firstName}
                     >
-                        {request.rider.last_name}
+                        {request.rider.lastName}
                     </User>
                 );
-            case "booking":
+            case "ride":
                 return (
                     <div className="flex flex-col justify-center">
-                        <p className="text-bold text-sm capitalize">{request.booking.pickup}</p>
-                        <p className="text-bold text-sm capitalize text-default-400">{request.booking.destination}</p>
+                        <p className="text-bold text-sm capitalize">{request.ride.pickup}</p>
+                        <p className="text-bold text-sm capitalize text-default-400">{request.ride.destination}</p>
                     </div>
                 );
             case "actions":
                 return (
                     <div className="relative flex justify-center items-center gap-1">
                         <Tooltip color="secondary" content="View Details about this Request">
-                            <span onClick={() => { modal1Disclosure.onOpen(); setRider(request.rider); setBooking(request.booking); setRequestId(request.id); }} className="text-lg text-secondary cursor-pointer active:opacity-50">
+                            <span onClick={() => { modal1Disclosure.onOpen(); setRider(request.rider); setRide(request.ride); setRequestId(request.id); }} className="text-lg text-secondary cursor-pointer active:opacity-50">
                                 <EyeIcon />
                             </span>
                         </Tooltip>
-                        <Tooltip color="danger" content="Delete this Aventon">
-                            <span onClick={() => { modal2Disclosure.onOpen(); deleteRequest(); setRequestId(request.id); }} className="text-lg text-danger cursor-pointer active:opacity-50">
+                        <Tooltip color="danger" content="Delete this Request">
+                            <span onClick={() => { modal2Disclosure.onOpen(); setRequestId(request.id); }} className="text-lg text-danger cursor-pointer active:opacity-50">
                                 <DeleteIcon />
                             </span>
                         </Tooltip>
@@ -90,20 +90,22 @@ export default function RequestTable() {
         return null;
     }
 
-    const UpdateBooking = async () => {
-        booking.seatsAvailable = booking.seatsAvailable - 1;
-        booking.riders.push(rider._id);
+    const UpdateRide = async () => {
+        ride.seatsAvailable = ride.seatsAvailable - 1;
+        let StringArrayRiders = ride.riders.map((rider: any) => rider.id);
+        StringArrayRiders.push(rider.id);
+        ride.riders = StringArrayRiders;
         const token = getToken();
-        const response = await fetch(`http://127.0.0.1:3001/booking/?id=${booking._id}`, {
+        const response = await fetch(`http://127.0.0.1:3001/ride/?id=${ride.id}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify(booking)
+            body: JSON.stringify(ride)
         });
         if (response.ok) {
-            toast('You have accepted ' + rider.first_name + " " + rider.last_name + ' into your Aventon', {
+            toast('You have accepted ' + rider.firstName + " " + rider.lastName + ' into your Aventon', {
                 hideProgressBar: true,
                 autoClose: 2000,
                 type: 'success',
@@ -112,7 +114,7 @@ export default function RequestTable() {
             });
             await deleteRequest();
             await new Promise(resolve => setTimeout(resolve, 1500));
-            router.push('/');
+            location.reload();
         } else {
             toast('Error while saving a spot!', {
                 hideProgressBar: true,
@@ -125,6 +127,7 @@ export default function RequestTable() {
     }
 
     const deleteRequest = async () => {
+        console.log(requestId);
         try {
             const response = await fetch(`http://127.0.0.1:3001/reqaventon/?id=${requestId}`, {
                 method: 'DELETE',
@@ -133,16 +136,14 @@ export default function RequestTable() {
                     'Authorization': `Bearer ${getToken()}`
                 }
             });
-
             if (response.ok) {
-                console.log('Request Deleted');
                 localStorage.removeItem('requestId');
-                localStorage.removeItem('action');
             }
         } catch (error) {
             console.error('An unexpected error happened:', error);
         }
     }
+
     return (
         <div className={styles.mainTable}>
             {requests.length != 0 ? (
@@ -183,7 +184,7 @@ export default function RequestTable() {
                                 <Button color="secondary" variant="ghost" onPress={onClose}>
                                     Cancel
                                 </Button>
-                                <Button color="danger" variant="ghost" onPress={() => { deleteRequest(); onClose() }}>
+                                <Button color="danger" variant="ghost" onClick={() => { onClose(); deleteRequest(); }}>
                                     Accept
                                 </Button>
                             </ModalFooter>
@@ -198,18 +199,18 @@ export default function RequestTable() {
                             <ModalHeader className="flex flex-col gap-1">Details about the User</ModalHeader>
                             <ModalBody>
                                 <p>
-                                    User&apos;s name: {rider.first_name + " " + rider.last_name}<br />
+                                    User&apos;s name: {rider.firstName + " " + rider.lastName}<br />
                                     User&apos;s email: {rider.email}<br />
-                                    User&apos;s phone number: {rider.phone_number}<br />
+                                    User&apos;s phone number: {rider.phone}<br />
                                     User&apos;s Cedula: {rider.cedula}<br />
-                                    User&apos;s Date of Birth: {new Date(rider.dob).toLocaleDateString()}
+                                    User&apos;s Date of Birth: {new Date((rider.dob / 1000) * 1000).toLocaleDateString()}<br />
                                 </p>
                             </ModalBody>
                             <ModalFooter>
                                 <Button color="secondary" variant="ghost" onPress={onClose}>
                                     Cancel
                                 </Button>
-                                <Button color="danger" variant="ghost" onPress={() => { UpdateBooking(); onClose() }}>
+                                <Button color="danger" variant="ghost" onPress={() => { UpdateRide(); onClose() }}>
                                     Accept
                                 </Button>
                             </ModalFooter>

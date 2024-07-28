@@ -10,7 +10,7 @@ import { useTheme } from "next-themes";
 import { toast, ToastContainer } from "react-toastify";
 import { jwtDecode } from "jwt-decode";
 
-export default function BookingDetailsPage() {
+export default function RideDetailsPage() {
 
     const router = useRouter()
     const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -22,7 +22,7 @@ export default function BookingDetailsPage() {
     const [days, setDays] = React.useState([]);
     const [fee, setFee] = useState(Number);
     const [seats, setSeats] = useState(Number);
-    const [driverId, setDriverId] = useState<any>();
+    const [driverId, setDriverId] = useState("");
 
     const getToken = () => {
         const tokenRow = document.cookie.split(';').find((row) => row.trim().startsWith('token='));
@@ -34,16 +34,16 @@ export default function BookingDetailsPage() {
 
     const handleClick = () => {
         const decodedToken: { userId: string; } = jwtDecode(getToken() as string);
-        const bookingId = localStorage.getItem('bookingId');
+        const rideId = localStorage.getItem('rideId');
         let request = {
             rider: decodedToken.userId,
-            driver: driverId._id,
-            booking: bookingId
+            rideDriver: driverId,
+            ride: rideId
         };
         saveASpot(request);
     }
 
-    const saveASpot = async (request: any) => {
+    const saveASpot = async (request: { rider: string; rideDriver: any; ride: string | null; }) => {
         const token = getToken();
         const response = await fetch('http://127.0.0.1:3001/reqaventon', {
             method: 'POST',
@@ -61,7 +61,7 @@ export default function BookingDetailsPage() {
                 theme: theme,
                 position: 'top-left'
             });
-            localStorage.removeItem('bookingId');
+            localStorage.removeItem('rideId');
             await new Promise(resolve => setTimeout(resolve, 1500));
             router.push('/');
         } else {
@@ -75,62 +75,37 @@ export default function BookingDetailsPage() {
         }
     }
 
-
-
-    // const saveASpot = async (booking: any) => {
-    //     const bookingId = localStorage.getItem('bookingId');
-    //     const token = getToken();
-    //     const response = await fetch(`http://127.0.0.1:3001/booking/?id=${bookingId}`, {
-    //         method: 'PATCH',
-    //         headers: {
-    //             'Content-Type': 'application/json',
-    //             'Authorization': `Bearer ${token}`
-    //         },
-    //         body: JSON.stringify(booking)
-    //     });
-    //     if (response.ok) {
-    //         toast('You have saved a spot!', {
-    //             hideProgressBar: true,
-    //             autoClose: 2000,
-    //             type: 'success',
-    //             theme: theme,
-    //             position: 'top-left'
-    //         });
-    //         localStorage.removeItem('bookingId');
-    //         await new Promise(resolve => setTimeout(resolve, 1500));
-    //         router.push('/');
-    //     } else {
-    //         toast('Error while saving a spot!', {
-    //             hideProgressBar: true,
-    //             autoClose: 2000,
-    //             type: 'error',
-    //             theme: theme,
-    //             position: 'top-left'
-    //         });
-    //     }
-    // }
-
     useEffect(() => {
-        const bookingId = localStorage.getItem('bookingId');
-        const fetchBookingData = async () => {
+        const token = getToken();
+        const rideId = localStorage.getItem('rideId');
+        const fetchRideData = async () => {
+            let graphql = JSON.stringify({
+                query: "query Query($getRideById: ID!) {\r\n  getRideById(id: $getRideById) {\r\n    driver {\r\n      id\r\n    }\r\n    destination\r\n    time\r\n    days\r\n    seatsAvailable\r\n    fee\r\n    id\r\n    pickup\r\n  }\r\n}",
+                variables: { "getRideById": rideId }
+            })
             try {
-                const response = await fetch(`http://127.0.0.1:3001/booking/?id=${bookingId}`, {
-                    method: 'GET',
+                const response = await fetch("http://localhost:4000/graphql", {
+                    method: "POST",
                     headers: {
-                        'Content-Type': 'application/json'
-                    }
+                        "Content-Type": "application/json",
+                        'Authorization': `Bearer ${token}`
+
+                    },
+                    body: graphql
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    setDriverId(data.driver);
-                    setDestination(data.destination);
-                    setTime(parseTime(data.time));
-                    setDays(data.days);
-                    setSeats(data.seatsAvailable);
-                    setFee(data.fee);
-                    setPickup(data.pickup);
+                    let ride = data.data.getRideById;
+                    setDriverId(ride.driver.id);
+                    console.log(ride.driver.id);
+                    setDestination(ride.destination);
+                    setTime(parseTime(ride.time));
+                    setDays(ride.days);
+                    setSeats(ride.seatsAvailable);
+                    setFee(ride.fee);
+                    setPickup(ride.pickup);
                 } else {
-                    console.error('Failed to fetch booking data');
+                    console.error('Failed to fetch ride data');
                     router.push('/login');
                 }
             } catch (error) {
@@ -140,13 +115,13 @@ export default function BookingDetailsPage() {
         };
 
         if (tokenExists) {
-            fetchBookingData();
+            fetchRideData();
         } else {
             router.push('/login');
         }
     }, [tokenExists, router]);
 
-    if (!time) return <div className="text-2xl text-bold text-center"> <Spinner label="Loading..." color="secondary" /></div>;
+    if (!time) return <div className={styles.detailsMain}> <Spinner label="Loading..." color="secondary" /></div>;
     return (
         <div className={styles.detailsMain}>
             {theme === "dark" ? (<Image
