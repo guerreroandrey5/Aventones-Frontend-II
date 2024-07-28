@@ -72,6 +72,7 @@ const getUserData = async (token: string) => {
 }
 
 export const AuthProvider: FunctionComponent<{ children: ReactNode }> = ({ children }) => {
+    const [mounted, setMounted] = useState(false);
     const [tokenExists, setokenExists] = useState<boolean>(false);
     const [email, setEmail] = useState<string>('');
     const [role, setRole] = useState<string>('');
@@ -88,7 +89,10 @@ export const AuthProvider: FunctionComponent<{ children: ReactNode }> = ({ child
             }
         });
     }, []);
-
+    useEffect(() => {
+        setMounted(true)
+    }, [])
+    if (!mounted) return null
     return (
         <AuthContext.Provider value={{ tokenExists, setokenExists, email, role }}>
             {children}

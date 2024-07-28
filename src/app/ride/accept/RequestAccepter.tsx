@@ -1,18 +1,19 @@
 'use client'
 import { useAuth } from "../../AuthContext";
 import React, { useEffect, useState } from "react";
-import styles from "./booking.module.css";
+import styles from "./RequestAccepter.module.css";
 import { useRouter } from 'next/navigation'
-import { Time } from "@internationalized/date";
+import { parseTime, Time } from "@internationalized/date";
 import { ClockCircleLinearIcon } from '../../components/icons/ClockCircleLinearIcon';
 import { Card, CardBody, Input, Button, CheckboxGroup, Checkbox, TimeInput, Image, TimeInputValue } from "@nextui-org/react";
 import { useTheme } from "next-themes";
 import { jwtDecode } from "jwt-decode";
 import { toast, ToastContainer } from "react-toastify";
 
-export default function BookingAdder() {
+export default function RequestAccepter() {
 
     const router = useRouter()
+    const [requestId, setRequestId] = useState(localStorage.getItem('requestId') ?? "");
     const { tokenExists } = useAuth();
     const { theme } = useTheme()
     const [time, setTime] = React.useState<TimeInputValue>(new Time(7, 0));
@@ -33,7 +34,7 @@ export default function BookingAdder() {
     const handleClick = () => {
         const token = getToken();
         const decodedToken: { userId: string; } = jwtDecode(token as string);
-        let booking = {
+        let request = {
             driver: decodedToken.userId,
             pickup: pickup,
             destination: destination,
@@ -43,14 +44,14 @@ export default function BookingAdder() {
             seatsAvailable: seats
         }
         if (verifyFields()) {
-            postBooking(booking);
+            postBooking(request);
         } else {
             toastNOK();
         }
     }
 
     const verifyFields = () => {
-        if (pickup == "" || destination == "" || days.length == 0 || fee == 0) {
+        if (seats == 0 || fee == 0) {
             return false;
         }
         return true;
@@ -66,7 +67,7 @@ export default function BookingAdder() {
     }
 
     const toastOK = () => {
-        toast('Thanks for booking an Aventon!', {
+        toast('Thanks for accepting this Request!', {
             hideProgressBar: true,
             autoClose: 2000,
             type: 'success',
@@ -86,10 +87,9 @@ export default function BookingAdder() {
             });
             if (response && response.status == 201) {
                 toastOK();
-                localStorage.removeItem('requestId');
-                localStorage.removeItem('action');
+                await deleteRequest();
                 await new Promise(resolve => setTimeout(resolve, 1500));
-                window.location.reload();
+                location.reload();
             }
             else {
                 toastNOK();
@@ -99,34 +99,20 @@ export default function BookingAdder() {
         }
     }
 
-    const deleteRequest = async (id: string) => {
+    const deleteRequest = async () => {
         try {
-            const response = await fetch(`http://127.0.0.1:3001/reqaventon/?id=${id}`, {
-                method: "DELETE",
+            const response = await fetch(`http://127.0.0.1:3001/reqaventon/?id=${requestId}`, {
+                method: 'DELETE',
                 headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${getToken()}`
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${getToken()}`
                 }
             });
-            if (response && response.status == 200) {
-                toast('Request Deleted', {
-                    hideProgressBar: true,
-                    autoClose: 2000,
-                    type: 'success',
-                    theme: theme,
-                    position: 'top-left'
-                });
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                window.location.reload();
-            }
-            else {
-                toast('An error happened', {
-                    hideProgressBar: true,
-                    autoClose: 2000,
-                    type: 'error',
-                    theme: theme,
-                    position: 'top-left'
-                });
+
+            if (response.ok) {
+                console.log('Request Deleted');
+                localStorage.removeItem('requestId');
+                localStorage.removeItem('action');
             }
         } catch (error) {
             console.error('An unexpected error happened:', error);
@@ -134,10 +120,40 @@ export default function BookingAdder() {
     }
 
     useEffect(() => {
-        if (!tokenExists) {
-            router.push('/');
+        setRequestId(localStorage.getItem('requestId') ?? "");
+        const fetchRequestData = async () => {
+            try {
+                const token = getToken();
+                const response = await fetch(`http://127.0.0.1:3001/reqaventon/?id=${requestId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log(data.pickup);
+                    setPickup(data.pickup);
+                    setDestination(data.destination);
+                    setTime(parseTime(data.time));
+                    setDays(data.days);
+                } else {
+                    console.error('Failed to fetch request data');
+                    router.push('/login');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                router.push('/login');
+            }
+        };
+
+        if (tokenExists) {
+            fetchRequestData();
+        } else {
+            router.push('/login');
         }
-    }, []);
+    }, [tokenExists, router, requestId]);
 
     return (
         <div className={styles.bookingMain}>
@@ -152,23 +168,23 @@ export default function BookingAdder() {
                 alt="Car Icon"
                 disableSkeleton={true}
             />)}
-            <h1 className={styles.h1Title}>Wanna host an Aventon?, let&apos;s do it then!</h1>
+            <h1 className={styles.h1Title}>We recieved this request, wanna accept it?</h1>
             <br />
             <Card>
                 <CardBody>
-                    <p>Aventons Details</p>
+                    <p>Request Details</p>
                 </CardBody>
             </Card>
             <br />
             <div className={styles.bookingCRUD}>
-                <Input color="secondary" type="text" variant="bordered" label="Departure From" isRequired onChange={(e) => setPickup(e.target.value)} />
-                <Input color="secondary" type="text" variant="bordered" label="Arrive To" isRequired onChange={(e) => setDestination(e.target.value)} />
+                <Input color="secondary" type="text" value={pickup} variant="bordered" label="Departure From" isReadOnly />
+                <Input color="secondary" type="text" value={destination} variant="bordered" label="Arrive To" isReadOnly />
                 <Input color="secondary" type="Number" variant="bordered" label="Fee" isRequired startContent={
                     <div className="pointer-events-none flex items-center">
                         <span className="text-default-400 text-small">$</span>
                     </div>
                 } onChange={(e) => setFee(Number(e.target.value))} />
-                <TimeInput color="secondary" value={time} onChange={setTime} hourCycle={24} variant="bordered" isRequired label="Time" startContent={(
+                <TimeInput color="secondary" value={time} isReadOnly hourCycle={24} variant="bordered" isRequired label="Time" startContent={(
                     <ClockCircleLinearIcon className="text-xl text-default-400 pointer-events-none flex-shrink-0" />
                 )} />
             </div>
@@ -183,11 +199,12 @@ export default function BookingAdder() {
                 <br />
                 <CheckboxGroup
                     isRequired
-                    label="When will this Aventon be available?"
+                    label="When the requester needs this Aventon?"
                     orientation="horizontal"
-                    description="Select the days you will provide an Aventon."
+                    description="Days selected by the requester."
                     color="secondary"
-                    onValueChange={setDays}
+                    value={days}
+                    isReadOnly
                 >
                     <Checkbox value="Monday">Monday</Checkbox>
                     <Checkbox value="Tuesday">Tuesday</Checkbox>
@@ -199,7 +216,7 @@ export default function BookingAdder() {
                 </CheckboxGroup>
                 <br />
             </>
-            <Button variant="ghost" color="secondary" onClick={handleClick}>Create an Aventon</Button>
+            <Button variant="ghost" color="secondary" onClick={handleClick}>Accept the Request</Button>
             <ToastContainer />
         </div>
     );

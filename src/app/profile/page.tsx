@@ -114,7 +114,7 @@ const ProfilePage: React.FC = () => {
             localStorage.setItem('profilePic', profilePic);
             toastOK();
             await new Promise(resolve => setTimeout(resolve, 1000));
-            window.location.reload();
+            location.reload();
         }
         else {
             toastNOK();
@@ -133,7 +133,7 @@ const ProfilePage: React.FC = () => {
                 }
 
                 let graphql = JSON.stringify({
-                    query: "query GetUserById($getUserByIdId: ID!) {\r\n  getUserById(id: $getUserByIdId) {\r\n    id\r\n    firstName\r\n    lastName\r\n    cedula\r\n    dob\r\n    email\r\n    phone\r\n    profilePicture\r\n    isDriver\r\n  }\r\n}",
+                    query: "query GetUserById($getUserByIdId: ID!) {\n  getUserById(id: $getUserByIdId) {\n    firstName\n    lastName\n    cedula\n    dob\n    email\n    phone\n    isDriver\n    vehicle {\n      model\n      year\n      plate\n      make\n      seats\n    }\n  }\n}",
                     variables: { "getUserByIdId": decodedToken?.userId }
                 })
                 const response = await fetch("http://localhost:4000/graphql", {
@@ -150,11 +150,11 @@ const ProfilePage: React.FC = () => {
                     setLname(User.lastName);
                     setEmail(User.email);
                     setPhone(User.phone);
-                    setModel(User.model);
-                    setPlate(User.plate);
-                    setYear(User.year);
-                    setMake(User.make);
-                    setSeats(User.seats);
+                    setModel(User.vehicle.model);
+                    setPlate(User.vehicle.plate);
+                    setYear(User.vehicle.year);
+                    setMake(User.vehicle.make);
+                    setSeats(User.vehicle.seats);
                     setRole(User.isDriver ? 'Driver' : 'Rider');
                     return true;
                 }
@@ -169,88 +169,90 @@ const ProfilePage: React.FC = () => {
         }
     }, [tokenExists, router]);
 
-    if (!role) return <div className={styles.spinnerContainer}> <Spinner label="Loading..." color="secondary" /></div>;
+    if (!role) return <div className={styles.profileMain}> <Spinner label="Loading..." color="secondary" /></div>;
 
     return (
-        <div className={styles.main}>
-            <Card className="min-w-[35%]">
-                <CardHeader className="flex gap-3">
-                    <h1 className='text-3xl font-bold'>My Profile</h1>
-                </CardHeader>
-                <Divider />
-                <CardBody>
-                    {role === 'Rider' ? (
-                        <>
-                            <Input type="text" variant="bordered" color="secondary" label="First Name" value={fname} isReadOnly={isReadOnly} onChange={(e) => setFname(e.target.value)} /><br />
-                            <Input type="text" variant="bordered" color="secondary" label="Last Name" value={lname} isReadOnly={isReadOnly} onChange={(e) => setLname(e.target.value)} /><br />
-                            <Input type="email" variant="bordered" color="secondary" label="Email" value={email} isReadOnly={isReadOnly} onChange={(e) => setEmail(e.target.value)} /><br />
-                            <Input type="number" variant="bordered" color="secondary" label="Phone" value={phone.toString()} isReadOnly={isReadOnly} onChange={(e) => setPhone(Number(e.target.value))} /><br />
-                            <br />
-                            <input type="file" accept='.jpg, .png, .jpeg' color="secondary" disabled={isReadOnly} onChange={(e) => e.target.files && uploadImg(e.target.files[0])} />
-                            <br />
-                            <Chip variant='bordered' color="danger">1.5MB Max per image</Chip>
-                            <br />
-                        </>) : (
-                        <>
-                            <Input type="text" variant="bordered" color="secondary" label="First Name" value={fname} isReadOnly={isReadOnly} onChange={(e) => setFname(e.target.value)} /><br />
-                            <Input type="text" variant="bordered" color="secondary" label="Last Name" value={lname} isReadOnly={isReadOnly} onChange={(e) => setLname(e.target.value)} /><br />
-                            <Input type="email" variant="bordered" color="secondary" label="Email" value={email} isReadOnly={isReadOnly} onChange={(e) => setEmail(e.target.value)} /><br />
-                            <Input type="number" variant="bordered" color="secondary" label="Phone" value={phone.toString()} isReadOnly={isReadOnly} onChange={(e) => setPhone(Number(e.target.value))} /><br />
-                            <br />
-                            <input type="file" accept='.jpg, .png, .jpeg' color="secondary" disabled={isReadOnly} onChange={(e) => e.target.files && uploadImg(e.target.files[0])} />
-                            <br />
-                            <Chip variant='bordered' color="danger">1.5MB Max per image</Chip>
-                            <br />
-                            <Card>
-                                <CardBody>
-                                    <p>Car Details</p>
-                                </CardBody>
-                            </Card>
-                            <br />
-                            <Input type="text" variant="bordered" color="secondary" label="Make" value={make} isReadOnly={isReadOnly} onChange={(e) => setMake(e.target.value)} /><br />
-                            <Input type="text" variant="bordered" color="secondary" label="Model" value={model} isReadOnly={isReadOnly} onChange={(e) => setModel(e.target.value)} /><br />
-                            <Input type="Number" variant="bordered" color="secondary" label="Year" value={year.toString()} isReadOnly={isReadOnly} onChange={(e) => setYear(Number(e.target.value))} /><br />
-                            <Input type="Number" variant="bordered" color="secondary" min="1" label="Seats" value={seats.toString()} isReadOnly={isReadOnly} onChange={(e) => setSeats(Number(e.target.value))} /><br />
-                        </>)}
-                </CardBody>
-                <Divider />
-                <CardFooter>
-                    <div className={styles.editCheckbox}>
-                        <div className="flex gap-1">
-                            <Checkbox isSelected={!isReadOnly} color="warning" onValueChange={() => setisReadOnly(!isReadOnly)}>
-                                Allow Editing
-                            </Checkbox>
+        <div className={styles.profileMain}>
+            <div className={styles.profileForm}>
+                <Card className="min-w-[40%]">
+                    <CardHeader className="flex gap-3">
+                        <h1 className='text-3xl font-bold'>My Profile</h1>
+                    </CardHeader>
+                    <Divider />
+                    <CardBody>
+                        {role === 'Rider' ? (
+                            <>
+                                <Input type="text" variant="bordered" color="secondary" label="First Name" value={fname} isReadOnly={isReadOnly} onChange={(e) => setFname(e.target.value)} /><br />
+                                <Input type="text" variant="bordered" color="secondary" label="Last Name" value={lname} isReadOnly={isReadOnly} onChange={(e) => setLname(e.target.value)} /><br />
+                                <Input type="email" variant="bordered" color="secondary" label="Email" value={email} isReadOnly={isReadOnly} onChange={(e) => setEmail(e.target.value)} /><br />
+                                <Input type="number" variant="bordered" color="secondary" label="Phone" value={phone.toString()} isReadOnly={isReadOnly} onChange={(e) => setPhone(Number(e.target.value))} /><br />
+                                <br />
+                                <input type="file" accept='.jpg, .png, .jpeg' color="secondary" disabled={isReadOnly} onChange={(e) => e.target.files && uploadImg(e.target.files[0])} />
+                                <br />
+                                <Chip variant='bordered' color="danger">1.5MB Max per image</Chip>
+                                <br />
+                            </>) : (
+                            <>
+                                <Input type="text" variant="bordered" color="secondary" label="First Name" value={fname} isReadOnly={isReadOnly} onChange={(e) => setFname(e.target.value)} /><br />
+                                <Input type="text" variant="bordered" color="secondary" label="Last Name" value={lname} isReadOnly={isReadOnly} onChange={(e) => setLname(e.target.value)} /><br />
+                                <Input type="email" variant="bordered" color="secondary" label="Email" value={email} isReadOnly={isReadOnly} onChange={(e) => setEmail(e.target.value)} /><br />
+                                <Input type="number" variant="bordered" color="secondary" label="Phone" value={phone.toString()} isReadOnly={isReadOnly} onChange={(e) => setPhone(Number(e.target.value))} /><br />
+                                <br />
+                                <input type="file" accept='.jpg, .png, .jpeg' color="secondary" disabled={isReadOnly} onChange={(e) => e.target.files && uploadImg(e.target.files[0])} />
+                                <br />
+                                <Chip variant='bordered' color="danger">1.5MB Max per image</Chip>
+                                <br />
+                                <Card>
+                                    <CardBody>
+                                        <p>Car Details</p>
+                                    </CardBody>
+                                </Card>
+                                <br />
+                                <Input type="text" variant="bordered" color="secondary" label="Make" value={make} isReadOnly={isReadOnly} onChange={(e) => setMake(e.target.value)} /><br />
+                                <Input type="text" variant="bordered" color="secondary" label="Model" value={model} isReadOnly={isReadOnly} onChange={(e) => setModel(e.target.value)} /><br />
+                                <Input type="Number" variant="bordered" color="secondary" label="Year" value={year.toString()} isReadOnly={isReadOnly} onChange={(e) => setYear(Number(e.target.value))} /><br />
+                                <Input type="Number" variant="bordered" color="secondary" min="1" label="Seats" value={seats.toString()} isReadOnly={isReadOnly} onChange={(e) => setSeats(Number(e.target.value))} /><br />
+                            </>)}
+                    </CardBody>
+                    <Divider />
+                    <CardFooter>
+                        <div className={styles.editCheckbox}>
+                            <div className="flex gap-1">
+                                <Checkbox isSelected={!isReadOnly} color="warning" onValueChange={() => setisReadOnly(!isReadOnly)}>
+                                    Allow Editing
+                                </Checkbox>
+                            </div>
+                            <div className="flex gap-1">
+                                <Button variant="ghost" isDisabled={isReadOnly} color="danger" onPress={() => router.push('/')}>Cancel</Button>
+                                <Button variant="ghost" isDisabled={isReadOnly} color="secondary" onPress={onOpen}>Save</Button>
+                            </div>
                         </div>
-                        <div className="flex gap-1">
-                            <Button variant="ghost" isDisabled={isReadOnly} color="danger" onPress={() => router.push('/')}>Cancel</Button>
-                            <Button variant="ghost" isDisabled={isReadOnly} color="secondary" onPress={onOpen}>Save</Button>
-                        </div>
-                    </div>
-                </CardFooter>
-            </Card>
-            <Modal isOpen={isOpen} backdrop='blur' placement='center' onOpenChange={onOpenChange} isDismissable={false} isKeyboardDismissDisabled={true}>
-                <ModalContent>
-                    {(onClose) => (
-                        <>
-                            <ModalHeader className="flex flex-col gap-1">Warning</ModalHeader>
-                            <ModalBody>
-                                <p>
-                                    Are you sure you want to edit your profile?
-                                </p>
-                            </ModalBody>
-                            <ModalFooter>
-                                <Button color="secondary" variant="ghost" onPress={onClose}>
-                                    Cancel
-                                </Button>
-                                <Button color="danger" variant="ghost" onPress={() => { handleClick(); onClose() }}>
-                                    Yes
-                                </Button>
-                            </ModalFooter>
-                        </>
-                    )}
-                </ModalContent>
-            </Modal>
-            <ToastContainer />
+                    </CardFooter>
+                </Card>
+                <Modal isOpen={isOpen} backdrop='blur' placement='center' onOpenChange={onOpenChange} isDismissable={false} isKeyboardDismissDisabled={true}>
+                    <ModalContent>
+                        {(onClose) => (
+                            <>
+                                <ModalHeader className="flex flex-col gap-1">Warning</ModalHeader>
+                                <ModalBody>
+                                    <p>
+                                        Are you sure you want to edit your profile?
+                                    </p>
+                                </ModalBody>
+                                <ModalFooter>
+                                    <Button color="secondary" variant="ghost" onPress={onClose}>
+                                        Cancel
+                                    </Button>
+                                    <Button color="danger" variant="ghost" onPress={() => { handleClick(); onClose() }}>
+                                        Yes
+                                    </Button>
+                                </ModalFooter>
+                            </>
+                        )}
+                    </ModalContent>
+                </Modal>
+                <ToastContainer />
+            </div>
         </div>
     );
 };

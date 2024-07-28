@@ -11,7 +11,7 @@ import { Table, TableHeader, TableColumn, TableBody, Modal, ModalFooter, ModalCo
 import { toast, ToastContainer } from "react-toastify";
 import { useTheme } from "next-themes";
 
-interface Booking {
+interface Ride {
     id: string;
     driver: string;
     from: string;
@@ -24,18 +24,18 @@ interface Booking {
 
 export default function Aventones() {
 
-    const [bookings, setBookings] = useState<Booking[]>([]);
-    const loadingState = bookings.length === 0 ? "loading" : "idle";
+    const [rides, setRides] = useState<Ride[]>([]);
+    const loadingState = rides.length === 0 ? "loading" : "idle";
     const delID = React.useRef("");
     const { tokenExists } = useAuth();
     const router = useRouter();
-    const {theme} = useTheme();
+    const { theme } = useTheme();
     const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
             aventonesFetcher().then((result) => {
-                setBookings(result);
+                setRides(result);
             });
         }
     }, []);
@@ -58,7 +58,7 @@ export default function Aventones() {
 
     const handleDelete = async (id: string) => {
         const token = getToken();
-        const response = await fetch(`http://127.0.0.1:3001/booking/?id=${id}`, {
+        const response = await fetch(`http://127.0.0.1:3001/ride/?id=${id}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -74,30 +74,30 @@ export default function Aventones() {
                 position: 'top-left'
             });
             await new Promise(resolve => setTimeout(resolve, 2000));
-            window.location.reload();
+            location.reload();
         } else {
             console.error('An unexpected error happened:', response.statusText);
         }
     }
 
-    const renderCell = React.useCallback((booking: Booking, columnKey: React.Key) => {
-        const cellValue = booking[columnKey as keyof Booking];
+    const renderCell = React.useCallback((ride: Ride, columnKey: React.Key) => {
+        const cellValue = ride[columnKey as keyof Ride];
         switch (columnKey) {
             case "driver":
                 return (
                     <User
-                        avatarProps={{ radius: "lg", src: booking.avatar }}
-                        description={booking.car}
+                        avatarProps={{ radius: "lg", src: ride.avatar }}
+                        description={ride.car}
                         name={cellValue}
                     >
-                        {booking.car}
+                        {ride.car}
                     </User>
                 );
             case "from":
                 return (
                     <div className="flex flex-col">
                         <p className="text-bold text-sm capitalize">{cellValue}</p>
-                        <p className="text-bold text-sm capitalize text-default-400">{booking.to}</p>
+                        <p className="text-bold text-sm capitalize text-default-400">{ride.to}</p>
                     </div>
                 );
             case "seats":
@@ -117,14 +117,14 @@ export default function Aventones() {
                     <div className="relative flex justify-center items-center gap-1">
                         <Tooltip color="secondary" content="Edit this Aventon">
                             <span onClick={() => {
-                                router.push('/booking/edit')
-                                localStorage.setItem('bookingId', booking.id);
+                                router.push('/ride/edit')
+                                localStorage.setItem('rideId', ride.id);
                             }} className="text-lg text-secondary cursor-pointer active:opacity-50">
                                 <EditIcon />
                             </span>
                         </Tooltip>
                         <Tooltip color="danger" content="Delete this Aventon">
-                            <span onClick={() => { onOpen(); delID.current = booking.id; }} className="text-lg text-danger cursor-pointer active:opacity-50">
+                            <span onClick={() => { onOpen(); delID.current = ride.id; }} className="text-lg text-danger cursor-pointer active:opacity-50">
                                 <DeleteIcon />
                             </span>
                         </Tooltip>
@@ -146,8 +146,8 @@ export default function Aventones() {
             <h1 className="text-2xl text-bold text-center">My Aventones</h1>
             <br />
             <div className="flex justify-end gap-2">
-                <Button color="secondary" variant="ghost" onClick={() => router.push('/booking')}>
-                    Book an Aventon
+                <Button color="secondary" variant="ghost" onClick={() => router.push('/ride')}>
+                    Create an Aventon
                 </Button>
             </div>
             <br />
@@ -159,11 +159,11 @@ export default function Aventones() {
                         </TableColumn>
                     )}
                 </TableHeader>
-                <TableBody items={bookings} loadingContent={<Spinner label="Loading..." color="secondary" />} loadingState={loadingState}
+                <TableBody items={rides} loadingContent={<Spinner label="Loading..." color="secondary" />} loadingState={loadingState}
                 >
-                    {(booking) => (
-                        <TableRow key={booking.id}>
-                            {(columnKey) => <TableCell>{renderCell(booking, columnKey)}</TableCell>}
+                    {(ride) => (
+                        <TableRow key={ride.id}>
+                            {(columnKey) => <TableCell>{renderCell(ride, columnKey)}</TableCell>}
                         </TableRow>
                     )}
                 </TableBody>

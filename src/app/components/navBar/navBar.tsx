@@ -6,7 +6,6 @@ import { useAuth } from "@/app/AuthContext";
 import React, { useEffect, useState } from "react";
 import { Navbar, NavbarMenuToggle, NavbarMenu, NavbarMenuItem, NavbarBrand, NavbarContent, NavbarItem, Image, Button, Link, DropdownItem, DropdownTrigger, Dropdown, DropdownMenu, Avatar, useDisclosure, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@nextui-org/react";
 import { Moon, Sun } from "react-feather";
-// import { ChevronDown, Lock, Activity, Flash, Server, TagUser, Scale } from "./Icons";
 
 export default function NavBar() {
 
@@ -116,7 +115,7 @@ export default function NavBar() {
                             <DropdownItem aria-label="User Settings" key="settings" onClick={() => Router.push('/settings')}>Settings</DropdownItem>
                             {/* <DropdownItem aria-label="Help" key="help_and_feedback" onClick={() => Router.push('/help')}>Help & Feedback</DropdownItem> */}
                             <DropdownItem aria-label="Log Out" onClick={() => {
-                                userLogout(); window.location.reload(); setokenExists(false);
+                                userLogout(); location.reload(); setokenExists(false);
                             }}
                                 key="logout" color="danger">
                                 Log Out
@@ -159,7 +158,7 @@ export default function NavBar() {
                             </NavbarMenuItem>
                             <NavbarMenuItem>
                                 <Link onPress={() => {
-                                    userLogout(); window.location.reload(); setokenExists(false);
+                                    userLogout(); location.reload(); setokenExists(false);
                                 }}
                                     key="logout" color="danger">
                                     Log Out</Link>

@@ -74,7 +74,7 @@ export default function BookingDetailsPage() {
             toastOK();
             localStorage.removeItem('bookingId');
             await new Promise(resolve => setTimeout(resolve, 1000));
-            window.location.reload();
+            location.reload();
         }
         else {
             toastNOK();

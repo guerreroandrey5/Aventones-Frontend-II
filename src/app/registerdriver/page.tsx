@@ -34,13 +34,14 @@ export default function RegisterDriver() {
 
     const handleClick = () => {
         let ndob = formatter.format(dob.toDate(getLocalTimeZone()));
-        let driver = {
-            first_name: fName,
-            last_name: lName,
+        let user = {
+            firstName: fName,
+            lastName: lName,
             cedula: cedula,
             dob: ndob,
             email: email,
             phone: phone,
+            isDriver: true,
             model: model,
             plate: plate,
             year: year,
@@ -49,7 +50,7 @@ export default function RegisterDriver() {
             password: password
         }
         if (verifyFields()) {
-            postData(driver);
+            postData(user);
         } else {
             toast('Please fill all fields', {
                 hideProgressBar: true,
@@ -80,15 +81,15 @@ export default function RegisterDriver() {
             position: 'top-left'
         });
 
-    const postData = async (driver: { first_name: string; last_name: string; cedula: string; dob: string; email: string; phone: number; model: string; plate: string; year: number; make: string; password: string; seats: number; }) => {
-        const response = await fetch("http://127.0.0.1:3001/driver", {
+    const postData = async (user: { firstName: string; lastName: string; cedula: string; dob: string; email: string; phone: number; isDriver: boolean; model: string; plate: string; year: number; make: string; password: string; seats: number; }) => {
+        const response = await fetch("http://127.0.0.1:3001/user", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify(driver)
+            body: JSON.stringify(user)
         });
-        const data = await response.json();
+        await response.json();
         if (response && response.status == 201) {
             toastOK();
             await new Promise(resolve => setTimeout(resolve, 1500));

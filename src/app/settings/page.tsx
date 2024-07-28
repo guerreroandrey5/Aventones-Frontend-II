@@ -33,7 +33,7 @@ export default function RiderCRUD() {
             setokenExists(false);
             document.cookie = `token=; max-age=0; path=/`;
             await new Promise(resolve => setTimeout(resolve, 500));
-            window.location.reload();
+            location.reload();
         }
     }
 

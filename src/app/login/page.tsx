@@ -8,19 +8,16 @@ import React, { useEffect, useState } from "react";
 import { EyeFilledIcon } from "../components/icons/EyeFilledIcon";
 import { Button, Input, Image, RadioGroup, Radio } from "@nextui-org/react";
 import { EyeSlashFilledIcon } from "../components/icons/EyeSlashFilledIcon";
-import { GoogleLogin, GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 
 export default function LoginPage() {
     const { theme } = useTheme();
     const [mounted, setMounted] = useState(false);
-    const [selected, setSelected] = React.useState("rider");
     const { tokenExists, setokenExists } = useAuth();
     const router = useRouter();
     const [isVisible, setIsVisible] = React.useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [image, setImage] = useState("");
 
     const toggleVisibility = () => setIsVisible(!isVisible);
 
@@ -52,42 +49,14 @@ export default function LoginPage() {
             });
             if (response && response.status === 201) {
                 const data = await response.json();
-                await getUser(data.token);
                 setokenExists(true);
                 document.cookie = `token=${data.token}; max-age=86400; path=/`;
-                window.location.reload();
+                location.reload();
             } else {
                 toastNOK();
             }
         } catch (error) {
             console.error("Error:", error);
-        }
-    };
-
-    const getUser = async (token: any) => {
-        let decodedToken: { userId: string; } | undefined;
-        try {
-            decodedToken = jwtDecode(token as string);
-        } catch (error) {
-            console.log('Not token found!');
-        }
-
-        let graphql = JSON.stringify({
-            query: "query GetUserById($getUserByIdId: ID!) {\r\n  getUserById(id: $getUserByIdId) {\r\n    profilePicture\r\n    }\r\n}",
-            variables: { "getUserByIdId": decodedToken?.userId }
-        })
-        const response = await fetch("http://localhost:4000/graphql", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: graphql
-        });
-        if (response.ok) {
-            const data = await response.json();
-            let User = data.data.getUserById;
-            console.log(User.profilePicture);
-            localStorage.setItem('profilePic', User.profilePicture);
         }
     };
 
@@ -119,16 +88,6 @@ export default function LoginPage() {
                     disableSkeleton={true}
                 />)}
                 <h1 className={styles.h1Title}>Log In into Aventones</h1>
-                <RadioGroup
-                    label="Are you a Rider or a Driver?"
-                    orientation="horizontal"
-                    value={selected}
-                    onValueChange={setSelected}
-                    color="secondary"
-                >
-                    <Radio value="rider">Rider</Radio>
-                    <Radio value="driver">Driver</Radio>
-                </RadioGroup>
                 <br />
                 <Input
                     className="max-w-xs"
