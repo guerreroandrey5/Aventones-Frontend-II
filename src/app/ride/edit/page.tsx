@@ -22,6 +22,7 @@ export default function RideDetailsPage() {
     const [destination, setDestination] = useState("");
     const [days, setDays] = React.useState<string[]>([]);
     const [fee, setFee] = useState(Number);
+    const [driverId, setDriverId] = useState("");
     const [seats, setSeats] = useState(Number);
 
     const getToken = () => {
@@ -32,7 +33,7 @@ export default function RideDetailsPage() {
         return null;
     }
     const toastOK = () =>
-        toast('Your profile has been updated succesfully!', {
+        toast('Your ride has been updated succesfully!', {
             hideProgressBar: true,
             autoClose: 2000,
             type: 'success',
@@ -82,27 +83,35 @@ export default function RideDetailsPage() {
     };
 
     useEffect(() => {
-        setRideId(localStorage.getItem('bookingId') ?? "");
-        const fetchBookingData = async () => {
+        const token = getToken();
+        const rideId = localStorage.getItem('rideId');
+        const fetchRideData = async () => {
+            let graphql = JSON.stringify({
+                query: "query Query($getRideById: ID!) {\r\n  getRideById(id: $getRideById) {\r\n    driver {\r\n      id\r\n    }\r\n    destination\r\n    time\r\n    days\r\n    seatsAvailable\r\n    fee\r\n    id\r\n    pickup\r\n  }\r\n}",
+                variables: { "getRideById": rideId }
+            })
             try {
-                const token = getToken();
-                const response = await fetch(`http://127.0.0.1:3001/booking/?id=${rideId}`, {
-                    method: 'GET',
+                const response = await fetch("http://127.0.0.1:4000/graphql", {
+                    method: "POST",
                     headers: {
-                        'Content-Type': 'application/json',
+                        "Content-Type": "application/json",
                         'Authorization': `Bearer ${token}`
-                    }
+                    },
+                    body: graphql
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    setDestination(data.destination);
-                    setTime(parseTime(data.time));
-                    setDays(data.days);
-                    setSeats(data.seatsAvailable);
-                    setFee(data.fee);
-                    setPickup(data.pickup);
+                    let ride = data.data.getRideById;
+                    setDriverId(ride.driver.id);
+                    console.log(ride.driver.id);
+                    setDestination(ride.destination);
+                    setTime(parseTime(ride.time));
+                    setDays(ride.days);
+                    setSeats(ride.seatsAvailable);
+                    setFee(ride.fee);
+                    setPickup(ride.pickup);
                 } else {
-                    console.error('Failed to fetch booking data');
+                    console.error('Failed to fetch ride data');
                     router.push('/login');
                 }
             } catch (error) {
@@ -112,7 +121,7 @@ export default function RideDetailsPage() {
         };
 
         if (tokenExists) {
-            fetchBookingData();
+            fetchRideData();
         } else {
             router.push('/login');
         }
